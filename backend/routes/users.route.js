@@ -1,22 +1,10 @@
 const express = require('express');
-
 const router = express.Router()
 
-const DUMMY_USERS = [
-    {
-        id: 'u1',
-        name: 'Kit'
-    }
-]
+const usersControllers = require('../controllers/users-controllers')
 
-// router.get('/:uid', (req, res, next) => {
-//     const userId = req.params.uid
-//     const user = DUMMY_USERS.find(u => {
-//         return u.id = userId
-//     })
-
-//     res.json({ user })
-
-// })
+router.post('/signup', usersControllers.signup)
+router.post('/login', usersControllers.login)
+router.get('/', usersControllers.getUsers)
 
 module.exports = router

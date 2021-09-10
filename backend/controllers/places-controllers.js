@@ -1,6 +1,6 @@
 const HttpError = require('../models/http-error')
 
-const DUMMY_PLACES = [
+let DUMMY_PLACES = [
     {
         id: 'p1',
         title: 'Empire State Building',
@@ -14,18 +14,18 @@ const DUMMY_PLACES = [
     },
 ]
 
-const getPlaceByUserId = (req, res, next) => {
+const getPlacesByUserId = (req, res, next) => {
     const userId = req.params.uid
     console.log(req.params)
-    const place = DUMMY_PLACES.find(p => {
+    const places = DUMMY_PLACES.filter(p => {
         return p.creator === userId
     })
 
-    if (!place) {
-        return next(new HttpError('Could not find a place for provided user id', 404))
+    if (!places || places.length === 0) {
+        return next(new HttpError('Could not find a places for provided user id', 404))
     }
 
-    res.json({ place })
+    res.json({places})
 }
 
 const getPlaceById = (req, res, next) => {
@@ -37,7 +37,7 @@ const getPlaceById = (req, res, next) => {
 
     if (!place) {
 
-        return next(new HttpError('Could not find a place for provided user id', 404))
+        return next(new HttpError('Could not find a places for provided user id', 404))
 
         // ===== basic way to respon 404
         // return res.status(404)
@@ -63,9 +63,39 @@ const createPlace = (req, res, next) => {
     DUMMY_PLACES.push(createPlace)
 
     // created sucessful code 201
-    res.status(201).json({place:createPlace})
+    res.status(201).json({ place: createPlace })
 }
 
+const updatePlace = (req, res, next) => {
+    const { title, description } = req.body
+    const placeId = req.params.pid
+
+    // make a copy of update place
+    const updatedplace = { ...DUMMY_PLACES.find(p => p.id === placeId) }
+
+    // get the place index
+    const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeId)
+
+    // Update the value
+    updatedplace.title = title;
+    updatedplace.description = description;
+
+    // replace the old place with the new copy by DUMMY_PLACES index
+    DUMMY_PLACES[placeIndex] = updatedplace
+
+    res.status(201).json({ place: updatedplace })
+}
+
+const deletePlace = (req, res, next) => {
+    const placeId = req.params.pid
+    DUMMY_PLACES = DUMMY_PLACES.filter(p=> p.id !== placeId )
+    res.status(201).json({'message':'deleted place.',
+place:DUMMY_PLACES})
+}
+
+
 exports.getPlaceById = getPlaceById
-exports.getPlaceByUserId = getPlaceByUserId
+exports.getPlacesByUserId = getPlacesByUserId
 exports.createPlace = createPlace
+exports.updatePlace = updatePlace
+exports.deletePlace = deletePlace

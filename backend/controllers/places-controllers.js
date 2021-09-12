@@ -1,5 +1,7 @@
 const HttpError = require('../models/http-error')
 const { validationResult } = require('express-validator')
+const { v4: uuidv4 } = require('uuid');
+const getCoordForAddress = require('../util/location')
 
 let DUMMY_PLACES = [
     {
@@ -52,21 +54,30 @@ const getPlaceById = (req, res, next) => {
     res.json({ place })
 }
 
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
     // validator check your req result
     const errors = validationResult(req)
     // If errors is not empty throw error
     if (!errors.isEmpty()) {
         console.log(errors)
-        throw new HttpError ('Invalid input passed, please check your data.', 422)
+        // next() as aysnc function
+        return next(new HttpError('Invalid input passed, please check your data.', 422))
     }
 
-    const { title, description, coordinates, address, creator } = req.body;
+    const { title, description, address, creator } = req.body;
+
+    let coordinates;
+    try {
+        coordinates = await getCoordForAddress(address)
+    } catch (err) {
+        return next(err)
+    }
+
     const createPlace = {
+        id: uuidv4(),
         title,
         description,
         location: coordinates,
-        address,
         creator
     }
     DUMMY_PLACES.push(createPlace)
@@ -81,7 +92,7 @@ const updatePlace = (req, res, next) => {
     // If errors is not empty throw error
     if (!errors.isEmpty()) {
         console.log(errors)
-        throw new HttpError ('Invalid input passed, please check your data.', 422)
+        throw new HttpError('Invalid input passed, please check your data.', 422)
     }
 
     const { title, description } = req.body
@@ -105,6 +116,11 @@ const updatePlace = (req, res, next) => {
 
 const deletePlace = (req, res, next) => {
     const placeId = req.params.pid
+
+    if (!DUMMY_PLACES.filter(p => p.id !== placeId)) {
+        throw new HttpError('Could not find a place for that id', 404)
+    }
+
     DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId)
     res.status(201).json({
         'message': 'deleted place.',

@@ -24,7 +24,7 @@ const getUsers = (req, res, next) => {
 const signup = (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        throw new HttpError('Input valid, Please check and try again.')
+        throw new HttpError('Input invalid, Please check and try again.')
     }
 
     const { name, email, password } = req.body
